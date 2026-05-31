@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "要件定義サポートAI",
+  title: "要件定義サポートAI ver.2",
   description: "AIと対話しながら要件定義・技術選定を進めるWebアプリ",
 };
 
