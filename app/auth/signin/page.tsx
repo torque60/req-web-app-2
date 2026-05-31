@@ -11,7 +11,7 @@ function SignInContent() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-10 max-w-sm w-full text-center">
-        <h1 className="text-xl font-semibold text-gray-800 mb-2">要件定義サポートAI</h1>
+        <h1 className="text-xl font-semibold text-gray-800 mb-2">要件定義サポートAI ver.2</h1>
         <p className="text-sm text-gray-500 mb-8">
           ログインするとセッションが保存され、<br />いつでも過去の要件書を確認できます。
         </p>

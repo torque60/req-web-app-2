@@ -151,7 +151,7 @@ export default function Home() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-10 max-w-sm w-full text-center">
-          <h1 className="text-xl font-semibold text-gray-800 mb-2">要件定義サポートAI</h1>
+          <h1 className="text-xl font-semibold text-gray-800 mb-2">要件定義サポートAI ver.2</h1>
           <p className="text-sm text-gray-500 mb-8">
             ログインするとセッションが保存され、<br />いつでも過去の要件書を確認できます。
           </p>
@@ -180,7 +180,7 @@ export default function Home() {
     <div className="flex flex-col h-screen overflow-hidden">
       {/* ヘッダー */}
       <div className="shrink-0 bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
-        <span className="text-xs font-medium text-gray-600">要件定義サポートAI</span>
+        <span className="text-xs font-medium text-gray-600">要件定義サポートAI ver.2</span>
         <div className="flex items-center gap-3">
           {saveMsg && <span className="text-xs text-green-600">{saveMsg}</span>}
           <button
