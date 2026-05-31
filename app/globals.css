@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Markdown styles for chat messages */
+.markdown-chat p { margin: 0.25rem 0; }
+.markdown-chat strong { font-weight: 600; }
+.markdown-chat ul { margin: 0.25rem 0; padding-left: 1.25rem; list-style-type: disc; }
+.markdown-chat ol { margin: 0.25rem 0; padding-left: 1.25rem; list-style-type: decimal; }
+.markdown-chat li { margin: 0.1rem 0; }
+.markdown-chat code { font-family: monospace; font-size: 0.85em; background: rgba(0,0,0,0.08); padding: 0.1em 0.3em; border-radius: 3px; }
+
+/* Markdown styles for document pane */
+.markdown-doc h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: #111; }
+.markdown-doc h2 { font-size: 1.1rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; color: #333; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.25rem; }
+.markdown-doc p { margin: 0.5rem 0; color: #444; line-height: 1.6; font-size: 0.9rem; }
+.markdown-doc em { color: #9ca3af; font-style: italic; }
+.markdown-doc ul { margin: 0.5rem 0; padding-left: 1.5rem; list-style-type: disc; }
+.markdown-doc ol { margin: 0.5rem 0; padding-left: 1.5rem; list-style-type: decimal; }
+.markdown-doc li { margin: 0.25rem 0; color: #444; font-size: 0.9rem; line-height: 1.6; }
+.markdown-doc table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.875rem; }
+.markdown-doc th { background: #f3f4f6; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid #e5e7eb; font-weight: 600; }
+.markdown-doc td { padding: 0.5rem 0.75rem; border: 1px solid #e5e7eb; }
+.markdown-doc strong { font-weight: 600; color: #111; }
+.markdown-doc code { font-family: monospace; font-size: 0.85em; background: #f3f4f6; padding: 0.1em 0.3em; border-radius: 3px; }
