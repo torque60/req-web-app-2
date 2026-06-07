@@ -10,9 +10,10 @@ interface MdFileSummary {
 
 interface HistoryPaneProps {
   onClose: () => void
+  onOpen: (id: string) => void
 }
 
-export default function HistoryPane({ onClose }: HistoryPaneProps) {
+export default function HistoryPane({ onClose, onOpen }: HistoryPaneProps) {
   const [files, setFiles] = useState<MdFileSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
@@ -55,14 +56,14 @@ export default function HistoryPane({ onClose }: HistoryPaneProps) {
   return (
     <div className="flex flex-col h-full bg-white">
       <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between shrink-0">
-        <h2 className="text-sm font-semibold text-gray-700">保存済み要件書</h2>
+        <h2 className="text-sm font-semibold text-gray-700">保存済みセッション</h2>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xs">閉じる</button>
       </div>
       <div className="flex-1 overflow-y-auto">
         {loading ? (
           <p className="p-6 text-sm text-gray-400">読み込み中...</p>
         ) : files.length === 0 ? (
-          <p className="p-6 text-sm text-gray-400">保存済みの要件書はありません。</p>
+          <p className="p-6 text-sm text-gray-400">保存済みのセッションはありません。</p>
         ) : (
           <ul className="divide-y divide-gray-100">
             {files.map(f => (
@@ -72,6 +73,12 @@ export default function HistoryPane({ onClose }: HistoryPaneProps) {
                   <p className="text-xs text-gray-400">{new Date(f.createdAt).toLocaleString('ja-JP')}</p>
                 </div>
                 <div className="flex gap-2 shrink-0">
+                  <button
+                    onClick={() => onOpen(f.id)}
+                    className="text-xs px-2 py-1 text-white bg-indigo-600 rounded hover:bg-indigo-700 transition-colors"
+                  >
+                    開く
+                  </button>
                   <button
                     onClick={() => handleDownload(f.id, f.filename)}
                     className="text-xs px-2 py-1 text-indigo-600 border border-indigo-200 rounded hover:bg-indigo-50 transition-colors"
