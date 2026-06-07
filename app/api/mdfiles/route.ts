@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { checkSameOrigin } from '@/lib/security'
-
-const MAX_FILES_PER_USER = 100
+import { buildMarkdown } from '@/lib/markdown'
+import { parseSnapshot, MAX_FILES_PER_USER, MAX_CONTENT_LENGTH } from '@/lib/mdfile'
 
 export async function GET() {
   const session = await getServerSession(authOptions)
@@ -39,11 +40,18 @@ export async function POST(req: NextRequest) {
   }
 
   const b = body as Record<string, unknown>
-  if (typeof b.filename !== 'string' || typeof b.content !== 'string') {
+  if (typeof b.filename !== 'string') {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
 
-  if (b.content.length > 100000) {
+  // docState から content(Markdown) をサーバ生成する（content はクライアント入力ではない）
+  const snap = parseSnapshot(body)
+  if (!snap) {
+    return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+  }
+
+  const content = buildMarkdown(snap.docState)
+  if (content.length > MAX_CONTENT_LENGTH) {
     return NextResponse.json({ error: 'Content too large' }, { status: 400 })
   }
 
@@ -60,7 +68,11 @@ export async function POST(req: NextRequest) {
     data: {
       userId: session.user.id,
       filename: b.filename.slice(0, 200),
-      content: b.content,
+      content,
+      docState: snap.docState as unknown as Prisma.InputJsonValue,
+      messages: snap.messages as unknown as Prisma.InputJsonValue,
+      phase: snap.phase,
+      questionIndex: snap.questionIndex,
     },
   })
 
