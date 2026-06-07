@@ -53,8 +53,8 @@ ALLOWED_EMAILS (env, カンマ区切り)
 | `questionIndex` | 整数 0〜9 |
 | `doc` | オブジェクト。10キー全て string・各 ≤ 2000文字 |
 
-`/api/mdfiles` POST / `/api/mdfiles/[id]` PUT: `content` は文字列必須・≤ 100,000文字。
-`messages` を保存する場合は会話の保存サイズ上限（JSON 化したサイズの上限）を超えないこと。POST は保存件数 ≤ 100、PUT は所有者（`userId`）一致を確認する。
+`/api/mdfiles` POST / `/api/mdfiles/[id]` PUT: `docState` を受け取り、サーバが `content = buildMarkdown(docState)` を生成する。
+`docState` の各値・生成される `content`（≤ 100,000文字）・`messages` の保存サイズ（JSON 化したサイズの上限）を検証する。POST は保存件数 ≤ 100、PUT は所有者（`userId`）一致を確認する。
 
 ## プロンプトインジェクション対策
 

@@ -74,14 +74,13 @@ AI の応答が JSON として解析できない場合も **200** を返し、`m
 ```jsonc
 {
   "filename": "string",            // 先頭200文字に切り詰めて保存
-  "content": "string",             // Markdown 本文、≤ 100,000文字
-  "docState": { /* RequirementsDoc */ },  // 任意・再開用の生データ
+  "docState": { /* RequirementsDoc */ },  // 要件書の生データ（content はこれから生成）
   "messages": [ { "role": "...", "content": "..." } ],  // 任意・会話履歴
   "phase": "phase1" | "phase2" | "done",   // 任意
   "questionIndex": 0               // 任意・整数 0〜9
 }
 ```
-`docState`/`messages`/`phase`/`questionIndex` は任意。省略すると要件書のみのレコードになる。
+サーバは `docState` から `content`(Markdown) を生成して保存する。`messages`/`phase`/`questionIndex` は任意（会話再開用）。
 
 ### レスポンス（200）
 ```jsonc
@@ -93,7 +92,7 @@ AI の応答が JSON として解析できない場合も **200** を返し、`m
 
 | ステータス | 条件 |
 |-----------|------|
-| 400 | `filename`/`content` が文字列でない、content が 100,000 文字超、または `messages` が上限超 |
+| 400 | `filename`/`docState` が不正、生成 content が 100,000 文字超、または `messages` が上限超 |
 | 409 | 保存件数が上限（100件）に到達 |
 
 ---
@@ -125,14 +124,13 @@ AI の応答が JSON として解析できない場合も **200** を返し、`m
 ### リクエスト
 ```jsonc
 {
-  "content": "string",             // Markdown 本文、≤ 100,000文字
   "docState": { /* RequirementsDoc */ },
   "messages": [ { "role": "...", "content": "..." } ],
   "phase": "phase1" | "phase2" | "done",
   "questionIndex": 0
 }
 ```
-`filename` は更新しない（作成時のまま固定）。
+`filename` は更新しない。サーバは `docState` から `content`(Markdown) を生成して保存する。
 
 ### レスポンス（200）
 ```jsonc
@@ -143,7 +141,7 @@ AI の応答が JSON として解析できない場合も **200** を返し、`m
 
 | ステータス | 条件 |
 |-----------|------|
-| 400 | `content` が文字列でない、content が 100,000 文字超、または `messages` が上限超 |
+| 400 | `docState` が不正、生成 content が 100,000 文字超、または `messages` が上限超 |
 | 404 | 指定 id が存在しない、または自分の所有でない（`userId` で絞り込むため区別不可） |
 
 ---
