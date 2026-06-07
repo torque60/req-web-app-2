@@ -32,3 +32,32 @@ export interface ChatRequest {
   questionIndex: number
   doc: RequirementsDoc
 }
+
+
+// セッション（要件書＋会話）のスナップショット
+export interface SessionSnapshot {
+  docState: RequirementsDoc
+  messages: Message[]
+  phase: Phase
+  questionIndex: number
+}
+
+// PUT /api/mdfiles/[id] の入力
+export type SavePayload = SessionSnapshot
+
+// POST /api/mdfiles の入力（初回作成・filename を含む）
+export interface CreatePayload extends SessionSnapshot {
+  filename: string
+}
+
+// GET /api/mdfiles/[id] のレスポンス（スナップショットは null 可）
+export interface MdFileDetail {
+  id: string
+  filename: string
+  content: string
+  createdAt: string
+  docState: RequirementsDoc | null
+  messages: Message[] | null
+  phase: Phase | null
+  questionIndex: number | null
+}
