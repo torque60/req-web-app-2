@@ -55,3 +55,6 @@ yarn-error.log*
 next-env.d.ts
 
 /lib/generated/prisma
+
+# DDD 作業成果物（履歴に含めない）
+ai_working/
