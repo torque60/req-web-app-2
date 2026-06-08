@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import ChatPane from '@/components/ChatPane'
 import DocumentPane from '@/components/DocumentPane'
 import HistoryPane from '@/components/HistoryPane'
-import { buildMarkdown } from '@/lib/markdown'
-import type { Message, Phase, RequirementsDoc, ApiResponse } from '@/lib/types'
+import type { Message, Phase, RequirementsDoc, ApiResponse, MdFileDetail } from '@/lib/types'
 
 const INITIAL_DOC: RequirementsDoc = {
   problem: '',
@@ -38,6 +37,8 @@ export default function Home() {
   const [showHistory, setShowHistory] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
+  const [currentFileId, setCurrentFileId] = useState<string | null>(null)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
 
   const phase2Triggered = useRef(false)
   const messagesRef = useRef(messages)
@@ -108,6 +109,49 @@ export default function Home() {
     }
   }, [phase])
 
+  // セッション保存（要件書＋会話のスナップショット）。content はサーバが docState から生成する。
+  const saveSession = useCallback(async () => {
+    const filledCount = Object.values(doc).filter(Boolean).length
+    if (filledCount === 0) return
+    setSaveStatus('saving')
+    const payload = { docState: doc, messages, phase, questionIndex }
+    try {
+      if (!currentFileId) {
+        const filename = `project_plan_${new Date().toISOString().slice(0, 10)}.md`
+        const res = await fetch('/api/mdfiles', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename, ...payload }),
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        setCurrentFileId(data.id)
+      } else {
+        const res = await fetch(`/api/mdfiles/${currentFileId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      }
+      setSaveStatus('saved')
+    } catch (e) {
+      console.error('autosave failed:', e)
+      setSaveStatus('idle')
+      throw e
+    }
+  }, [doc, messages, phase, questionIndex, currentFileId])
+
+  // 変更を debounce（約2.5秒）して自動保存する
+  useEffect(() => {
+    const filledCount = Object.values(doc).filter(Boolean).length
+    if (filledCount === 0) return
+    const timer = setTimeout(() => {
+      void saveSession().catch(() => {})
+    }, 2500)
+    return () => clearTimeout(timer)
+  }, [saveSession, doc])
+
   function handleSend(content: string) {
     const newMessages: Message[] = [...messages, { role: 'user', content }]
     setMessages(newMessages)
@@ -123,19 +167,40 @@ export default function Home() {
     }
     setSaving(true)
     try {
-      const content = buildMarkdown(doc)
-      const filename = `project_plan_${new Date().toISOString().slice(0, 10)}.md`
-      const res = await fetch('/api/mdfiles', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename, content }),
-      })
-      setSaveMsg(res.ok ? '保存しました' : '保存に失敗しました')
+      await saveSession()
+      setSaveMsg('保存しました')
     } catch {
       setSaveMsg('保存に失敗しました')
     } finally {
       setSaving(false)
       setTimeout(() => setSaveMsg(''), 3000)
+    }
+  }
+
+  // 履歴から保存済みセッションを開いて復元する
+  async function restoreSession(id: string) {
+    const hasProgress = messages.length > 1 || Object.values(doc).some(Boolean)
+    if (hasProgress && !confirm('現在の会話を破棄して、保存済みのセッションを開きますか？')) return
+    try {
+      const res = await fetch(`/api/mdfiles/${id}`)
+      if (!res.ok) return
+      const data: MdFileDetail = await res.json()
+
+      if (data.docState) setDoc(data.docState as RequirementsDoc)
+      if (data.messages) setMessages(data.messages as Message[])
+      if (data.phase) setPhase(data.phase as Phase)
+      if (typeof data.questionIndex === 'number') setQuestionIndex(data.questionIndex)
+
+      setCurrentFileId(data.id)
+      phase2Triggered.current = true
+      setShowHistory(false)
+      setMobileTab('chat')
+
+      if (!data.docState && !data.messages) {
+        alert('このデータには会話履歴がありません。要件書のみ利用できます。')
+      }
+    } catch (e) {
+      console.error('restore failed:', e)
     }
   }
 
@@ -173,16 +238,21 @@ export default function Home() {
   }
 
   const rightPanel = showHistory
-    ? <HistoryPane onClose={() => setShowHistory(false)} />
+    ? <HistoryPane onClose={() => setShowHistory(false)} onOpen={restoreSession} />
     : <DocumentPane doc={doc} phase={phase} />
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
-      {/* ヘッダー */}
       <div className="shrink-0 bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
         <span className="text-xs font-medium text-gray-600">要件定義サポートAI ver.2</span>
         <div className="flex items-center gap-3">
-          {saveMsg && <span className="text-xs text-green-600">{saveMsg}</span>}
+          {saveMsg ? (
+            <span className="text-xs text-green-600">{saveMsg}</span>
+          ) : saveStatus === 'saving' ? (
+            <span className="text-xs text-gray-400">保存中...</span>
+          ) : saveStatus === 'saved' ? (
+            <span className="text-xs text-gray-400">保存しました</span>
+          ) : null}
           <button
             onClick={handleSaveToDb}
             disabled={saving}
@@ -203,7 +273,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* モバイル用タブバー */}
       <div className="flex md:hidden shrink-0 bg-white border-b border-gray-200">
         {(['chat', 'doc', 'history'] as const).map(tab => (
           <button
@@ -221,9 +290,7 @@ export default function Home() {
         ))}
       </div>
 
-      {/* メインコンテンツ */}
       <div className="flex flex-1 overflow-hidden">
-        {/* チャットペイン */}
         <div className={`
           flex-col border-gray-200
           ${mobileTab === 'chat' ? 'flex' : 'hidden'}
@@ -239,7 +306,6 @@ export default function Home() {
           />
         </div>
 
-        {/* 右ペイン（ドキュメント or 履歴） */}
         <div className={`
           flex-col
           ${mobileTab !== 'chat' ? 'flex' : 'hidden'}

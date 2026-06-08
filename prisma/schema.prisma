@@ -73,5 +73,10 @@ model MdFile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  docState      Json?
+  messages      Json?
+  phase         String?
+  questionIndex Int?
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
